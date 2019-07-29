@@ -13,30 +13,42 @@ export type Matcher = {
   addRoutes: (routes: Array<RouteConfig>) => void;
 };
 
+// 一个方法  传入了路由表  和  vuerouter实例  返回了一个Matcher  {match,addRoutes}
 export function createMatcher (
   routes: Array<RouteConfig>,
   router: VueRouter
 ): Matcher {
+  // 把路由表 生成 list  map 方便后面使用
   const { pathList, pathMap, nameMap } = createRouteMap(routes)
 
+  // 有可能动态添加的路由 所以可以调用方法继续生成映射
   function addRoutes (routes) {
     createRouteMap(routes, pathList, pathMap, nameMap)
   }
+  // 后面还有 match  redirect  alias  _createRoute 几个方法
 
+  // 判断是否能够匹配
   function match (
-    raw: RawLocation,
-    currentRoute?: Route,
-    redirectedFrom?: Location
+    raw: RawLocation,   // 下一个路由 string | Location
+    currentRoute?: Route,  // 当前路由 {path: string;name: ?string;hash: string;query: Dictionary<string>;params: Dictionary<string>;fullPath: string;matched: Array<RouteRecord>;redirectedFrom?: string;meta?: any;}
+    redirectedFrom?: Location  //  {_normalized?: boolean;name?: string;path?: string;hash?: string;query?: Dictionary<string>;params?: Dictionary<string>;append?: boolean;replace?: boolean;}
   ): Route {
+    // 根据当前路由 和 下一个路由（传入的location）计算出一个新的路径
     const location = normalizeLocation(raw, currentRoute, false, router)
     const { name } = location
 
+    // 是否是命名路由
     if (name) {
+      // 从map中直接拿到record对象
       const record = nameMap[name]
+      // 如果record不存在就警告
       if (process.env.NODE_ENV !== 'production') {
         warn(record, `Route with name '${name}' does not exist`)
       }
+      // 没有record
+      // 就创建一个route对象  传入的是null 最后这个route匹配不到组件
       if (!record) return _createRoute(null, location)
+      // 有record
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
@@ -68,6 +80,8 @@ export function createMatcher (
       }
     }
     // no match
+    // 都没有匹配上
+    // 传入的是null 获得的也是route对象 最后这个route匹配不到组件
     return _createRoute(null, location)
   }
 
@@ -173,18 +187,22 @@ export function createMatcher (
 }
 
 function matchRoute (
-  regex: RouteRegExp,
+  regex: RouteRegExp, // 路由匹配的正则
   path: string,
   params: Object
 ): boolean {
+  // 正则match
   const m = path.match(regex)
 
+  // 如果没有匹配成功就返回false
   if (!m) {
     return false
   } else if (!params) {
+    // 匹配成功 但是没有参数 返回true
     return true
   }
 
+  //
   for (let i = 1, len = m.length; i < len; ++i) {
     const key = regex.keys[i - 1]
     const val = typeof m[i] === 'string' ? decodeURIComponent(m[i]) : m[i]

@@ -12,6 +12,7 @@ import {
   resolveAsyncComponents
 } from '../util/resolve-components'
 
+// 其他几个history都继承这个类 所有能够对外提供相同的api
 export class History {
   router: Router;
   base: string;
@@ -61,8 +62,19 @@ export class History {
     this.errorCbs.push(errorCb)
   }
 
+  // 重要方法
+  // 跳转到一个地址location
+  // 成功的回调onComplete
+  // 失败的回调onAbort
   transitionTo (location: RawLocation, onComplete?: Function, onAbort?: Function) {
+
+    // this.current 就是当前的route  切换到新的地址 this.current就是新的route
+
+    // 根据目标地址 和 当前地址 计算出一个新的路由
+    // 无论是否匹配成功都会返回一个route对象
     const route = this.router.match(location, this.current)
+
+    // 路径切换
     this.confirmTransition(route, () => {
       this.updateRoute(route)
       onComplete && onComplete(route)
@@ -97,21 +109,33 @@ export class History {
       }
       onAbort && onAbort(err)
     }
+
+    // 当前路径和目标路径是否是同一个
     if (
       isSameRoute(route, current) &&
       // in the case the route map has been dynamically appended to
       route.matched.length === current.matched.length
     ) {
+      // 路径相同就没有必要切换
+      // url变化
       this.ensureURL()
+      // 直接取消
       return abort()
     }
 
+    // 当前路径的record  目标路径的record
+    // updated
+    // deactivated
+    // activated
+    // 上面这三个都是record
     const {
       updated,
       deactivated,
       activated
     } = resolveQueue(this.current.matched, route.matched)
 
+    // 定义一个队列 NavigationGuard
+    // to from next
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
       extractLeaveGuards(deactivated),
@@ -126,6 +150,8 @@ export class History {
     )
 
     this.pending = route
+    // 执行runQueue的时候 其实执行的是这个函数
+    // 传入的参数是当前遍历到的queue中的一项   next是一个回调 当执行的时候才继续执行queue中的下一项
     const iterator = (hook: NavigationGuard, next) => {
       if (this.pending !== route) {
         return abort()
@@ -152,19 +178,25 @@ export class History {
             }
           } else {
             // confirm transition and pass on the value
+            // 正常case 继续queue下一项
             next(to)
           }
         })
       } catch (e) {
+        // 抛出异常 就走abort
         abort(e)
       }
     }
 
+    // 执行队列
+    // 当队列中的所有项被iterator执行完之后 才执行cb这个回调
     runQueue(queue, iterator, () => {
       const postEnterCbs = []
       const isValid = () => this.current === route
       // wait until async components are resolved before
       // extracting in-component enter guards
+
+      // 上一个队列执行完毕后 再构建一个队列 继续执行
       const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
       const queue = enterGuards.concat(this.router.resolveHooks)
       runQueue(queue, iterator, () => {
@@ -221,19 +253,26 @@ function resolveQueue (
   deactivated: Array<RouteRecord>
 } {
   let i
+  // 长度最长的
   const max = Math.max(current.length, next.length)
+
+  // 遍历 获取到i 不相等的索引
   for (i = 0; i < max; i++) {
     if (current[i] !== next[i]) {
       break
     }
   }
   return {
+    // 前面有相同的record
     updated: next.slice(0, i),
+    // 目标 新的record
     activated: next.slice(i),
+    // 当前 剩余的record
     deactivated: current.slice(i)
   }
 }
 
+// 解析守卫
 function extractGuards (
   records: Array<RouteRecord>,
   name: string,

@@ -15,6 +15,8 @@ import { AbstractHistory } from './history/abstract'
 
 import type { Matcher } from './create-matcher'
 
+// 入口
+// 输出一个class
 export default class VueRouter {
   static install: () => void;
   static version: string;
@@ -39,18 +41,25 @@ export default class VueRouter {
     this.beforeHooks = []
     this.resolveHooks = []
     this.afterHooks = []
+    // 传入的是路由表   路径对应组件的映射数组  this就是vuerouter的实例
     this.matcher = createMatcher(options.routes || [], this)
 
+    // 路由的模式 默认hash
     let mode = options.mode || 'hash'
+
+    // 如果配置了history模式 并且浏览器不支持PushState  允许用兜底策略 就改用hash
     this.fallback = mode === 'history' && !supportsPushState && options.fallback !== false
     if (this.fallback) {
       mode = 'hash'
     }
+    // 非浏览器才用 抽象模式
     if (!inBrowser) {
       mode = 'abstract'
     }
     this.mode = mode
 
+
+    // 实例化不同的history  他们实现了相同的api
     switch (mode) {
       case 'history':
         this.history = new HTML5History(this, options.base)
@@ -62,17 +71,21 @@ export default class VueRouter {
         this.history = new AbstractHistory(this, options.base)
         break
       default:
+        // 选项中设置了 其他的模式  可能单词拼写错误、、、
         if (process.env.NODE_ENV !== 'production') {
           assert(false, `invalid mode: ${mode}`)
         }
     }
   }
 
+  // 每当调用history的transitionTo都会调用这里的match方法
   match (
     raw: RawLocation,
     current?: Route,
     redirectedFrom?: Location
   ): Route {
+    // 调用matcher的方法
+    // matcher在构造函数中赋值的
     return this.matcher.match(raw, current, redirectedFrom)
   }
 
@@ -80,30 +93,42 @@ export default class VueRouter {
     return this.history && this.history.current
   }
 
+  // 对外暴露install方法的里面 通过mixin注入类beforeCreate方法中 有判断
+  // 当根Vue实例走到beforeCreate的时候会执行 vuerouter实例的init
   init (app: any /* Vue component instance */) {
+    // 传入的app是根Vue实例 vm
     process.env.NODE_ENV !== 'production' && assert(
       install.installed,
       `not installed. Make sure to call \`Vue.use(VueRouter)\` ` +
       `before creating root instance.`
     )
 
+    // apps里面记录了 vue组件实例对象
     this.apps.push(app)
 
     // main app already initialized.
+    // 确保只执行一次
     if (this.app) {
       return
     }
 
+    // 记录根vm
     this.app = app
 
     const history = this.history
 
     if (history instanceof HTML5History) {
+      // history模式
+
+      // 路径切换
       history.transitionTo(history.getCurrentLocation())
     } else if (history instanceof HashHistory) {
+      // hash模式
+
       const setupHashListener = () => {
         history.setupListeners()
       }
+      // 路径切换
       history.transitionTo(
         history.getCurrentLocation(),
         setupHashListener,
@@ -111,6 +136,7 @@ export default class VueRouter {
       )
     }
 
+    // 路径监听
     history.listen(route => {
       this.apps.forEach((app) => {
         app._route = route
@@ -146,14 +172,17 @@ export default class VueRouter {
     this.history.replace(location, onComplete, onAbort)
   }
 
+  // 最终会调用 history实例的go方法  base中定义 各个history中实现
   go (n: number) {
     this.history.go(n)
   }
 
+  // router.back() 其实就是调用了go
   back () {
     this.go(-1)
   }
 
+  // router.forward() 其实就是调用了go
   forward () {
     this.go(1)
   }
@@ -227,6 +256,7 @@ function createHref (base: string, fullPath: string, mode) {
   return base ? cleanPath(base + '/' + path) : path
 }
 
+// Vue.use() 就是调用install方法
 VueRouter.install = install
 VueRouter.version = '__VERSION__'
 

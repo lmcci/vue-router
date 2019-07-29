@@ -69,6 +69,7 @@ export function resolveAsyncComponents (matched: Array<RouteRecord>): Function {
   }
 }
 
+//
 export function flatMapComponents (
   matched: Array<RouteRecord>,
   fn: Function

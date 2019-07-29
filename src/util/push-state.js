@@ -3,9 +3,11 @@
 import { inBrowser } from './dom'
 import { saveScrollPosition } from './scroll'
 
+// 判断浏览器是否支持pushState方法
 export const supportsPushState = inBrowser && (function () {
   const ua = window.navigator.userAgent
 
+  // 这些浏览器都支持
   if (
     (ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) &&
     ua.indexOf('Mobile Safari') !== -1 &&
@@ -15,6 +17,7 @@ export const supportsPushState = inBrowser && (function () {
     return false
   }
 
+  // in 判断是否存在
   return window.history && 'pushState' in window.history
 })()
 

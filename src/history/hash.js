@@ -19,8 +19,10 @@ export class HashHistory extends History {
 
   // this is delayed until the app mounts
   // to avoid the hashchange listener being fired too early
+  // 监听浏览器回退
   setupListeners () {
     const router = this.router
+    // 滚动条
     const expectScroll = router.options.scrollBehavior
     const supportsScroll = supportsPushState && expectScroll
 
@@ -28,11 +30,14 @@ export class HashHistory extends History {
       setupScroll()
     }
 
+    // 设置监听器
     window.addEventListener(supportsPushState ? 'popstate' : 'hashchange', () => {
+      //
       const current = this.current
       if (!ensureSlash()) {
         return
       }
+      // 执行路径切换
       this.transitionTo(getHash(), route => {
         if (supportsScroll) {
           handleScroll(this.router, route, current, true)
@@ -46,8 +51,14 @@ export class HashHistory extends History {
 
   push (location: RawLocation, onComplete?: Function, onAbort?: Function) {
     const { current: fromRoute } = this
+    // 路径切换
     this.transitionTo(location, route => {
+      // 切换成功之后
+
+      // 改变hash
       pushHash(route.fullPath)
+
+      // 滚动定位
       handleScroll(this.router, route, fromRoute, false)
       onComplete && onComplete(route)
     }, onAbort)
@@ -88,11 +99,14 @@ function checkFallback (base) {
   }
 }
 
+// 确保有一个斜线
 function ensureSlash (): boolean {
+  // 获取hash不以/开头 或者为空
   const path = getHash()
   if (path.charAt(0) === '/') {
     return true
   }
+  //  添加一个斜线
   replaceHash('/' + path)
   return false
 }
@@ -106,6 +120,7 @@ export function getHash (): string {
 }
 
 function getUrl (path) {
+  // 先从当前页面路径中找 到#  如果有就替换后面的  没有就拼接上#hash
   const href = window.location.href
   const i = href.indexOf('#')
   const base = i >= 0 ? href.slice(0, i) : href
@@ -113,9 +128,11 @@ function getUrl (path) {
 }
 
 function pushHash (path) {
+  // 是否支持PushState
   if (supportsPushState) {
     pushState(getUrl(path))
   } else {
+    // 不支持的话 直接改变hash
     window.location.hash = path
   }
 }

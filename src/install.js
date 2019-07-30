@@ -36,6 +36,7 @@ export function install (Vue) {
         // 调用实例方法init
         this._router.init(this)
         // 把_route变成响应式的
+        // 通过这里真正执行渲染
         Vue.util.defineReactive(this, '_route', this._router.history.current)
       } else {
         // 非根Vue

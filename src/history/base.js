@@ -134,18 +134,21 @@ export class History {
       activated
     } = resolveQueue(this.current.matched, route.matched)
 
-    // 定义一个队列 NavigationGuard
+    // 定义一个队列 NavigationGuard就是一个函数
     // to from next
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
       extractLeaveGuards(deactivated),
       // global before hooks
+      // 用户定一个的
       this.router.beforeHooks,
       // in-component update hooks
       extractUpdateHooks(updated),
       // in-config enter guards
+      //  新的要激活的路由 把所有的beforeEnter获取出来
       activated.map(m => m.beforeEnter),
       // async components
+      //  异步组件 新的要激活的路由
       resolveAsyncComponents(activated)
     )
 
@@ -197,13 +200,16 @@ export class History {
       // extracting in-component enter guards
 
       // 上一个队列执行完毕后 再构建一个队列 继续执行
+      // beforeRouteEnter
       const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
+      // 用户设置的beforeResolve
       const queue = enterGuards.concat(this.router.resolveHooks)
       runQueue(queue, iterator, () => {
         if (this.pending !== route) {
           return abort()
         }
         this.pending = null
+        // 完成的回调
         onComplete(route)
         if (this.router.app) {
           this.router.app.$nextTick(() => {
@@ -215,9 +221,15 @@ export class History {
   }
 
   updateRoute (route: Route) {
+    // 替换current 当前的route
+    // 记录上一次的route
     const prev = this.current
     this.current = route
+
+    // 调用回调
     this.cb && this.cb(route)
+
+    // 执行afterHooks
     this.router.afterHooks.forEach(hook => {
       hook && hook(route, prev)
     })
@@ -279,14 +291,25 @@ function extractGuards (
   bind: Function,
   reverse?: boolean
 ): Array<?Function> {
+  // flatMapComponents 会对传入的每个record 把他的component当做参数调用fn 获得返回值后 拍平成一维数组返回
   const guards = flatMapComponents(records, (def, instance, match, key) => {
+    //  组件构造函数
+    // 组件实例
+    // record
+    // 组件名（路由的component 默认defalut）
+
+    // name是参数传入的 beforeRouteLeave 或者 beforeRouteUpdate
     const guard = extractGuard(def, name)
     if (guard) {
       return Array.isArray(guard)
+        //  是一个数组 就遍历 然后调用bind 把所有返回值 组成数组
+        //  bind是为了执行生命周期的时候绑定一个上下文 传入的instance
         ? guard.map(guard => bind(guard, instance, match, key))
         : bind(guard, instance, match, key)
     }
   })
+
+  // 最后一个参数是否要调换数组的顺序 生命周期执行顺序
   return flatten(reverse ? guards.reverse() : guards)
 }
 
@@ -294,10 +317,13 @@ function extractGuard (
   def: Object | Function,
   key: string
 ): NavigationGuard | Array<NavigationGuard> {
+  // 传入的组件不是一个构造函数
   if (typeof def !== 'function') {
     // extend now so that global mixins are applied.
+    // 调用extend创建一个构造函数
     def = _Vue.extend(def)
   }
+  // 从构造函数中拿到生命周期hook beforeRouteLeave beforeRouteUpdate
   return def.options[key]
 }
 
@@ -311,6 +337,7 @@ function extractUpdateHooks (updated: Array<RouteRecord>): Array<?Function> {
 
 function bindGuard (guard: NavigationGuard, instance: ?_Vue): ?NavigationGuard {
   if (instance) {
+    // 返回一个函数 然后执行guard 其实就是每个vue内的路由hook 绑定上下文为vm实例
     return function boundRouteGuard () {
       return guard.apply(instance, arguments)
     }
@@ -337,6 +364,7 @@ function bindEnterGuard (
   return function routeEnterGuard (to, from, next) {
     return guard(to, from, cb => {
       next(cb)
+      // next 的回调 第一个参数是vm
       if (typeof cb === 'function') {
         cbs.push(() => {
           // #750
@@ -344,6 +372,7 @@ function bindEnterGuard (
           // the instance may not have been registered at this time.
           // we will need to poll for registration until current route
           // is no longer valid.
+          // 轮询
           poll(cb, match.instances, key, isValid)
         })
       }

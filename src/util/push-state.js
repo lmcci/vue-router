@@ -28,6 +28,7 @@ const Time = inBrowser && window.performance && window.performance.now
 
 let _key: string = genKey()
 
+// 获取时间 当成key
 function genKey (): string {
   return Time.now().toFixed(3)
 }
@@ -41,11 +42,13 @@ export function setStateKey (key: string) {
 }
 
 export function pushState (url?: string, replace?: boolean) {
+  // 保留当前的滚动位置
   saveScrollPosition()
   // try...catch the pushState call to get around Safari
   // DOM Exception 18 where it limits to 100 pushState calls
   const history = window.history
   try {
+    // replace 还是 push
     if (replace) {
       history.replaceState({ key: _key }, '', url)
     } else {

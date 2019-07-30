@@ -126,11 +126,13 @@ export default class VueRouter {
       // hash模式
 
       const setupHashListener = () => {
+        // 当浏览器回退的时候
         history.setupListeners()
       }
       // 路径切换
       history.transitionTo(
         history.getCurrentLocation(),
+        // 成功和失败的会调都走一次setupHashListener
         setupHashListener,
         setupHashListener
       )
@@ -144,7 +146,11 @@ export default class VueRouter {
     })
   }
 
+  // router的实例方法
+
+  // 调用添加 hook方法
   beforeEach (fn: Function): Function {
+    // 会把fn 添加到beforeHooks 数组中
     return registerHook(this.beforeHooks, fn)
   }
 
@@ -244,7 +250,10 @@ export default class VueRouter {
 }
 
 function registerHook (list: Array<any>, fn: Function): Function {
+  // 方法添加进数组
   list.push(fn)
+
+  // 返回一个函数  当函数被调用的时候 删除这个hook
   return () => {
     const i = list.indexOf(fn)
     if (i > -1) list.splice(i, 1)

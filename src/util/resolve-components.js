@@ -15,6 +15,8 @@ export function resolveAsyncComponents (matched: Array<RouteRecord>): Function {
       // we are not using Vue's default async resolving mechanism because
       // we want to halt the navigation until the incoming component has been
       // resolved.
+
+      // def是一个函数  没有cid  就是异步组件
       if (typeof def === 'function' && def.cid === undefined) {
         hasAsync = true
         pending++
@@ -27,6 +29,7 @@ export function resolveAsyncComponents (matched: Array<RouteRecord>): Function {
           def.resolved = typeof resolvedDef === 'function'
             ? resolvedDef
             : _Vue.extend(resolvedDef)
+          // 当加载完成的时候 赋值给components
           match.components[key] = resolvedDef
           pending--
           if (pending <= 0) {
@@ -69,20 +72,29 @@ export function resolveAsyncComponents (matched: Array<RouteRecord>): Function {
   }
 }
 
-//
+// matched传入的是一个record数组
 export function flatMapComponents (
   matched: Array<RouteRecord>,
   fn: Function
 ): Array<?Function> {
+  // 遍历record数组 获取没一项的对应组件
+  // 调用concat 把数组拍平成一维数组
   return flatten(matched.map(m => {
+    // key就是每个组件名
     return Object.keys(m.components).map(key => fn(
+      //  组件构造函数
       m.components[key],
+      // 组件实例
       m.instances[key],
-      m, key
+      // record
+      m,
+        // 组件名（路由的component 默认defalut）
+        key
     ))
   }))
 }
 
+// 调用concat 然后把传入的数组拍平
 export function flatten (arr: Array<any>): Array<any> {
   return Array.prototype.concat.apply([], arr)
 }

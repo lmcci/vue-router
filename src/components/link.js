@@ -31,8 +31,10 @@ export default {
   render (h: Function) {
     const router = this.$router
     const current = this.$route
+    // 计算出新的路径
     const { location, route, href } = router.resolve(this.to, current, this.append)
 
+    // 类名相关
     const classes = {}
     const globalActiveClass = router.options.linkActiveClass
     const globalExactActiveClass = router.options.linkExactActiveClass
@@ -68,6 +70,7 @@ export default {
       }
     }
 
+    // 点击事件
     const on = { click: guardEvent }
     if (Array.isArray(this.event)) {
       this.event.forEach(e => { on[e] = handler })
@@ -79,6 +82,7 @@ export default {
       class: classes
     }
 
+    // 默认就是a标签
     if (this.tag === 'a') {
       data.on = on
       data.attrs = { href }

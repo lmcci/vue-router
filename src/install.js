@@ -17,6 +17,7 @@ export function install (Vue) {
   const isDef = v => v !== undefined
 
   const registerInstance = (vm, callVal) => {
+    // vm.$options._parentVnode.data.registerRouteInstance() router-view中的
     let i = vm.$options._parentVnode
     if (isDef(i) && isDef(i = i.data) && isDef(i = i.registerRouteInstance)) {
       i(vm, callVal)
@@ -29,9 +30,9 @@ export function install (Vue) {
       // 判断在new Vue的时候是否传入了VueRouter实例
       // 根Vue实例才走这里
       if (isDef(this.$options.router)) {
-        // 根Vue实例
+        // 根Vue实例 vm
         this._routerRoot = this
-        // vue router 的实例
+        // vue router 的实例  就是通过new VueRouter() 创建的对象
         this._router = this.$options.router
         // 调用实例方法init
         this._router.init(this)
@@ -40,7 +41,7 @@ export function install (Vue) {
         Vue.util.defineReactive(this, '_route', this._router.history.current)
       } else {
         // 非根Vue
-        // 根据初始化调用的时机  所有的组件都能通过 _routerRoot找到根vue实例
+        // 根据初始化调用的时机 先父后子 所有的组件都能通过 _routerRoot找到根vue实例
         this._routerRoot = (this.$parent && this.$parent._routerRoot) || this
       }
 
@@ -53,11 +54,13 @@ export function install (Vue) {
   })
 
   // Vue原型上定义$router
+  // 每个实例访问到$router的时候 其实是在访问_routerRoot._router  根vm._router 也就是创建的vuerouter实例
   Object.defineProperty(Vue.prototype, '$router', {
     get () { return this._routerRoot._router }
   })
 
   // Vue原型上定义$route
+  // 每个实例访问到$route的时候 其实是在访问_routerRoot._route
   Object.defineProperty(Vue.prototype, '$route', {
     get () { return this._routerRoot._route }
   })
@@ -69,5 +72,6 @@ export function install (Vue) {
   // 配置的合并策略
   const strats = Vue.config.optionMergeStrategies
   // use the same hook merging strategy for route hooks
+  // 路由生命周期的合并策略 和created的一样
   strats.beforeRouteEnter = strats.beforeRouteLeave = strats.beforeRouteUpdate = strats.created
 }

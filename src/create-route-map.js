@@ -188,7 +188,7 @@ function addRouteRecord (
     pathMap[record.path] = record
   }
 
-  // 命名理由
+  // 命名路由
   if (name) {
     // 如果map中没有 就添加进map
     if (!nameMap[name]) {

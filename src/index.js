@@ -269,6 +269,7 @@ function createHref (base: string, fullPath: string, mode) {
 VueRouter.install = install
 VueRouter.version = '__VERSION__'
 
+// 通过script引入的时候 最终也是使用use
 if (inBrowser && window.Vue) {
   window.Vue.use(VueRouter)
 }

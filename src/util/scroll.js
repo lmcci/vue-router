@@ -86,10 +86,12 @@ function getElementPosition (el: Element, offset: Object): Object {
   }
 }
 
+// 是否是一个可用的定位对象  其中x,y有一个是数字就可以
 function isValidPosition (obj: Object): boolean {
   return isNumber(obj.x) || isNumber(obj.y)
 }
 
+// 序列化位置对象  x,y 有值就用 没值就取window下的页面滚动除去的距离 文档到窗口的距离
 function normalizePosition (obj: Object): Object {
   return {
     x: isNumber(obj.x) ? obj.x : window.pageXOffset,
@@ -97,13 +99,16 @@ function normalizePosition (obj: Object): Object {
   }
 }
 
+// 偏移量
 function normalizeOffset (obj: Object): Object {
   return {
+    // 是数字就用 不是数字就置为0
     x: isNumber(obj.x) ? obj.x : 0,
     y: isNumber(obj.y) ? obj.y : 0
   }
 }
 
+// 判断传入的参数是否是数字类型
 function isNumber (v: any): boolean {
   return typeof v === 'number'
 }

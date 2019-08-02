@@ -11,17 +11,18 @@ export default {
   },
   // 函数式组件
   render (_, { props, children, parent, data }) {
+    // 只是一个标记 下面的嵌套判断会用来计算深度
     data.routerView = true
 
     // directly use parent context's createElement() function
     // so that components rendered by router-view can resolve named slots
     // parent父组件的vue实例
     const h = parent.$createElement
-    // 命名视图
+    // 通过props传入的name  命名视图  <router-view name="a"></router-view>
     const name = props.name
-    //
+    // 当前的route实例
     const route = parent.$route
-    // keep alive
+    // keep alive 相关
     const cache = parent._routerViewCache || (parent._routerViewCache = {})
 
     // determine current view depth, also check to see if the tree
@@ -29,7 +30,10 @@ export default {
     let depth = 0
     let inactive = false
     // 一直往上找直到根，计算有多少个层级 嵌套的route view
+    // parent._routerRoot === parent
+    // _routerRoot就是根vm 当想等的时候就是到根了
     while (parent && parent._routerRoot !== parent) {
+      //  父组件中有routerView true   已经嵌套一层了
       if (parent.$vnode && parent.$vnode.data.routerView) {
         depth++
       }
@@ -38,6 +42,7 @@ export default {
       }
       parent = parent.$parent
     }
+    // 获得总的嵌套深度
     data.routerViewDepth = depth
 
     // render previous view if the tree is inactive and kept-alive
@@ -50,17 +55,21 @@ export default {
     // render empty node if no matched route
     // 没有匹配的记录 就返回一个空的
     if (!matched) {
+      // 缓存也置空
       cache[name] = null
+      // 渲染空节点
       return h()
     }
 
-    // 找到匹配的组件
+    // 找到匹配的组件 缓存一下
     const component = cache[name] = matched.components[name]
 
     // attach instance registration hook
     // this will be called in the instance's injected lifecycle hooks
     //  Vue.mixin beforeCreate destroyed 中有执行registerInstance
+    // record中有instances对象
     data.registerRouteInstance = (vm, val) => {
+      // 把传入的instance放在对应的record上
       // val could be undefined for unregistration
       const current = matched.instances[name]
       if (
@@ -78,6 +87,7 @@ export default {
     }
 
     // resolve props
+    // 处理router-view的props
     let propsToPass = data.props = resolveProps(route, matched.props && matched.props[name])
     if (propsToPass) {
       // clone to prevent mutation
@@ -93,6 +103,7 @@ export default {
     }
 
     // 渲染组件
+    // $createElement
     return h(component, data, children)
   }
 }

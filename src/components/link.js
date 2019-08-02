@@ -51,15 +51,19 @@ export default {
     const exactActiveClass = this.exactActiveClass == null
             ? exactActiveClassFallback
             : this.exactActiveClass
+    // 生成一个要跳转的路由
     const compareTarget = location.path
       ? createRoute(null, location, null, router)
       : route
 
+    // 是否是相同的路由 包含关系的路由
+    // 也是定义类名
     classes[exactActiveClass] = isSameRoute(current, compareTarget)
     classes[activeClass] = this.exact
       ? classes[exactActiveClass]
       : isIncludedRoute(current, compareTarget)
 
+    // 事件
     const handler = e => {
       if (guardEvent(e)) {
         if (this.replace) {

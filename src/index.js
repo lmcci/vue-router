@@ -146,6 +146,7 @@ export default class VueRouter {
       // 遍历所有使用当前vuerouter的实例的根vm对象
       this.apps.forEach((app) => {
         // app就是根vm 把变化的route给所有的vm._route赋值
+        // 触发settter 从而把所有以来都重新渲染
         app._route = route
       })
     })

@@ -14,6 +14,7 @@ export class HashHistory extends History {
     if (fallback && checkFallback(this.base)) {
       return
     }
+    // 没有写路径的时候 默认跳转到 #/
     ensureSlash()
   }
 

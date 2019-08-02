@@ -18,7 +18,9 @@ export function install (Vue) {
 
   const registerInstance = (vm, callVal) => {
     // vm.$options._parentVnode.data.registerRouteInstance() router-view中的
+    // 父vnode
     let i = vm.$options._parentVnode
+    // 然后执行registerRouteInstance 把当前vm传入  后面绑定hook上下文的时候使用
     if (isDef(i) && isDef(i = i.data) && isDef(i = i.registerRouteInstance)) {
       i(vm, callVal)
     }
@@ -38,6 +40,10 @@ export function install (Vue) {
         this._router.init(this)
         // 把_route变成响应式的
         // 通过这里真正执行渲染
+        // this._router.history 就是history的实例 也就是通过mode判断生成的
+        // current就是当前的route对象
+        // $route也是这个
+        // 这里做成相应式的 当路径发生改变的时候会重新调用 渲染
         Vue.util.defineReactive(this, '_route', this._router.history.current)
       } else {
         // 非根Vue
@@ -54,7 +60,8 @@ export function install (Vue) {
   })
 
   // Vue原型上定义$router
-  // 每个实例访问到$router的时候 其实是在访问_routerRoot._router  根vm._router 也就是创建的vuerouter实例
+  // 每个实例访问到$router的时候 其实是在访问_routerRoot._router  根vm._router
+  // 也就是创建的vuerouter实例
   Object.defineProperty(Vue.prototype, '$router', {
     get () { return this._routerRoot._router }
   })
@@ -62,6 +69,7 @@ export function install (Vue) {
   // Vue原型上定义$route
   // 每个实例访问到$route的时候 其实是在访问vm._route
   Object.defineProperty(Vue.prototype, '$route', {
+    // 当前的route对象
     get () { return this._routerRoot._route }
   })
 

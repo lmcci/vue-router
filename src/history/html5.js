@@ -70,10 +70,15 @@ export class HTML5History extends History {
   }
 }
 
+// 为了过滤 协议 域名 base
 export function getLocation (base: string): string {
+  // 除去协议 域名 query hash
   let path = window.location.pathname
+  // 以base为开头
   if (base && path.indexOf(base) === 0) {
+    // 删除base
     path = path.slice(base.length)
   }
+  // 拼上query hash
   return (path || '/') + window.location.search + window.location.hash
 }

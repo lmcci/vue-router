@@ -6,6 +6,7 @@ import { resolveQuery } from './query'
 import { fillParams } from './params'
 import { warn } from './warn'
 
+// 序列化location
 export function normalizeLocation (
   raw: RawLocation,
   current: ?Route,
@@ -38,7 +39,7 @@ export function normalizeLocation (
     } else if (current.matched.length) {
       // 最后一个匹配的路径
       const rawPath = current.matched[current.matched.length - 1].path
-      // 拼接当前路径和完整参数 完成路径
+      // 拼接当前路径和完整参数 完整路径
       next.path = fillParams(rawPath, params, `path ${current.path}`)
     } else if (process.env.NODE_ENV !== 'production') {
       warn(false, `relative params navigation requires a current route.`)
@@ -48,15 +49,15 @@ export function normalizeLocation (
 
   // 根据下一个路由的路径解析出 path query hash 只是简单的截取
   const parsedPath = parsePath(next.path || '')
-  // 当前路由的路径
+  // 当前路由的路径 默认是根/
   const basePath = (current && current.path) || '/'
   // 当前的路径 和 传入的路径 计算生成新的path
-  // 如果下一个路由的路径上面截取不出来 就直接返回当前path
+  // 如果下一个路由的路径上面截取不出来 就直接返回当前basePath
   const path = parsedPath.path
     ? resolvePath(parsedPath.path, basePath, append || next.append)
     : basePath
 
-  //
+  // 路径分割的query字符串转换成对象（options.parseQuery 转换方式如果有配置就用，没有就用默认的） 再和next.query 合并
   const query = resolveQuery(
     parsedPath.query,
     next.query,

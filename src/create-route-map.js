@@ -76,7 +76,7 @@ function addRouteRecord (
     )
   }
 
-  // 路径正则配置 没有设置就用空的
+  // 用户设置的路径正则配置 没有设置就用空的
   const pathToRegexpOptions: PathToRegexpOptions = route.pathToRegexpOptions || {}
 
   // 对子路由计算 拼接父路由路径和子路由路径
@@ -97,7 +97,7 @@ function addRouteRecord (
   const record: RouteRecord = {
     // 当前的路径
     path: normalizedPath,
-    //
+    // :foo 这种路径匹配正则
     regex: compileRouteRegex(normalizedPath, pathToRegexpOptions),
     // 路径对应的组件
     // todo components component 有什么区别
@@ -204,7 +204,12 @@ function addRouteRecord (
   }
 }
 
+// /：foo * 匹配
 function compileRouteRegex (path: string, pathToRegexpOptions: PathToRegexpOptions): RouteRegExp {
+  // path-to-regexp
+  // path A string, array of strings, or a regular expression
+  // keys An array to populate with keys found in the path. 这里是空
+  // 选项 sensitive strict end start delimiter endsWith whitelist
   const regex = Regexp(path, [], pathToRegexpOptions)
   if (process.env.NODE_ENV !== 'production') {
     const keys: any = Object.create(null)
@@ -216,9 +221,10 @@ function compileRouteRegex (path: string, pathToRegexpOptions: PathToRegexpOptio
   return regex
 }
 
-//
+// 序列化path
+// 父路由的path和path拼接
 function normalizePath (path: string, parent?: RouteRecord, strict?: boolean): string {
-  // 结尾如果有 \  就替换成空
+  // 结尾如果有 /  就替换成空
   if (!strict) path = path.replace(/\/$/, '')
   // 第一个字符是 /  就直接返回
   if (path[0] === '/') return path

@@ -7,13 +7,13 @@ export function resolvePath (
   base: string,
   append?: boolean
 ): string {
-  // 如果是以/开头就是绝对路径 直接返回
+  // 如果是以/开头就是绝对路径 直接返回他本身
   const firstChar = relative.charAt(0)
   if (firstChar === '/') {
     return relative
   }
 
-  // 如果是 query 或者 hash 就直接拼接后返回
+  // 如果是点对路径是 query 或者 hash 就直接拼接后返回
   if (firstChar === '?' || firstChar === '#') {
     return base + relative
   }
@@ -31,13 +31,13 @@ export function resolvePath (
   }
 
   // resolve relative path
-  // 相对路径替换最开头的/ 然后以/切割成数组
+  // 删除相对路径替换最开头的/ 然后以/切割成数组
   const segments = relative.replace(/^\//, '').split('/')
 
-  // 遍历
+  // 遍历相对路径
   for (let i = 0; i < segments.length; i++) {
     const segment = segments[i]
-    // ..就删除一个 标示网上找一级
+    // ..就删除一个 标示网上找一级 从base的数组中删除一个
     if (segment === '..') {
       stack.pop()
     } else if (segment !== '.') {
@@ -56,6 +56,8 @@ export function resolvePath (
   return stack.join('/')
 }
 
+// 把路径分割成 路径 参数 哈希 返回
+// 就根据 # ? 分割
 export function parsePath (path: string): {
   path: string;
   query: string;

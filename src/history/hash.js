@@ -60,6 +60,7 @@ export class HashHistory extends History {
 
       // 滚动定位
       handleScroll(this.router, route, fromRoute, false)
+      // 完成回调
       onComplete && onComplete(route)
     }, onAbort)
   }
@@ -73,24 +74,32 @@ export class HashHistory extends History {
     }, onAbort)
   }
 
+  // bom方法
   go (n: number) {
     window.history.go(n)
   }
 
+  //
   ensureURL (push?: boolean) {
+    // 当前的hash 和路径不相等的时候 就跳转到对应的地址
     const current = this.current.fullPath
     if (getHash() !== current) {
       push ? pushHash(current) : replaceHash(current)
     }
   }
 
+  // 直接返回hash值  就是路径
   getCurrentLocation () {
     return getHash()
   }
 }
 
+//
 function checkFallback (base) {
+  // 除去base之后的路径
   const location = getLocation(base)
+  // 不以/# 开头 就replace跳转
+  // 证明前面除了base还有其他的
   if (!/^\/#/.test(location)) {
     window.location.replace(
       cleanPath(base + '/#' + location)
@@ -111,14 +120,17 @@ function ensureSlash (): boolean {
   return false
 }
 
+// 获得hash路径
 export function getHash (): string {
   // We can't use window.location.hash here because it's not
   // consistent across browsers - Firefox will pre-decode it!
+  // 直接截取返回的
   const href = window.location.href
   const index = href.indexOf('#')
   return index === -1 ? '' : href.slice(index + 1)
 }
 
+// path 不包含协议 域名 这里调用之后拼接一个完整的返回
 function getUrl (path) {
   // 先从当前页面路径中找 到#  如果有就替换后面的  没有就拼接上#hash
   const href = window.location.href
@@ -130,6 +142,7 @@ function getUrl (path) {
 function pushHash (path) {
   // 是否支持PushState
   if (supportsPushState) {
+    // pushState中会记录滚动位置 生成key
     pushState(getUrl(path))
   } else {
     // 不支持的话 直接改变hash
@@ -138,9 +151,11 @@ function pushHash (path) {
 }
 
 function replaceHash (path) {
+  // 是否支持PushState
   if (supportsPushState) {
     replaceState(getUrl(path))
   } else {
+    // 不支持的话 直接replace跳转
     window.location.replace(getUrl(path))
   }
 }

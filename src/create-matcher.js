@@ -8,6 +8,7 @@ import { fillParams } from './util/params'
 import { createRouteMap } from './create-route-map'
 import { normalizeLocation } from './util/location'
 
+// flow定义的一个类型
 export type Matcher = {
   match: (raw: RawLocation, current?: Route, redirectedFrom?: Location) => Route;
   addRoutes: (routes: Array<RouteConfig>) => void;
@@ -166,6 +167,7 @@ export function createMatcher (
     return _createRoute(null, location)
   }
 
+  // 创建路由对象
   function _createRoute (
     record: ?RouteRecord,
     location: Location,
@@ -186,6 +188,7 @@ export function createMatcher (
   }
 }
 
+// regex是上面调用第三方库生成的正则
 function matchRoute (
   regex: RouteRegExp, // 路由匹配的正则
   path: string,
@@ -202,7 +205,8 @@ function matchRoute (
     return true
   }
 
-  //
+  // 所有的匹配成功结果 遍历一次
+  // 把匹配结果放在params中
   for (let i = 1, len = m.length; i < len; ++i) {
     const key = regex.keys[i - 1]
     const val = typeof m[i] === 'string' ? decodeURIComponent(m[i]) : m[i]
@@ -214,6 +218,8 @@ function matchRoute (
   return true
 }
 
+// 根据record计算出相对路径  返回一个path
 function resolveRecordPath (path: string, record: RouteRecord): string {
+  // 有父路由就传父路由的path  没有就以根路径为base
   return resolvePath(path, record.parent ? record.parent.path : '/', true)
 }

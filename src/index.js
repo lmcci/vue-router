@@ -148,6 +148,7 @@ export default class VueRouter {
 
   // router的实例方法
 
+  // 下面三个只是添加到对应的数组中
   // 调用添加 hook方法
   beforeEach (fn: Function): Function {
     // 会把fn 添加到beforeHooks 数组中
@@ -162,6 +163,7 @@ export default class VueRouter {
     return registerHook(this.afterHooks, fn)
   }
 
+  // 下面四个实例方法最后会调用 对应history的方法
   onReady (cb: Function, errorCb?: Function) {
     this.history.onReady(cb, errorCb)
   }
@@ -193,7 +195,9 @@ export default class VueRouter {
     this.go(1)
   }
 
+  // 当前路径对应哪些组件
   getMatchedComponents (to?: RawLocation | Route): Array<any> {
+    // 没有匹配的路由 就直接返回
     const route: any = to
       ? to.matched
         ? to
@@ -202,6 +206,7 @@ export default class VueRouter {
     if (!route) {
       return []
     }
+    // 获得route.matched所有匹配的路由把里面的components全部拿出来 组成一个数组返回
     return [].concat.apply([], route.matched.map(m => {
       return Object.keys(m.components).map(key => {
         return m.components[key]
@@ -209,6 +214,7 @@ export default class VueRouter {
     }))
   }
 
+  // 当前的路径 和 目标路径 匹配出一个路径
   resolve (
     to: RawLocation,
     current?: Route,
@@ -227,9 +233,11 @@ export default class VueRouter {
       append,
       this
     )
+    // 匹配到的路由
     const route = this.match(location, current)
     const fullPath = route.redirectedFrom || route.fullPath
     const base = this.history.base
+    // 拼接好的路径
     const href = createHref(base, fullPath, this.mode)
     return {
       location,
@@ -241,14 +249,18 @@ export default class VueRouter {
     }
   }
 
+  // 动态添加 路由配置
   addRoutes (routes: Array<RouteConfig>) {
+    // 更新一遍 map  list
     this.matcher.addRoutes(routes)
+    // 然后执行跳转
     if (this.history.current !== START) {
       this.history.transitionTo(this.history.getCurrentLocation())
     }
   }
 }
 
+// 单纯的把方法添加进数组 返回一个函数 调用的时候从数组删除
 function registerHook (list: Array<any>, fn: Function): Function {
   // 方法添加进数组
   list.push(fn)
@@ -260,8 +272,11 @@ function registerHook (list: Array<any>, fn: Function): Function {
   }
 }
 
+// 获得一个新的路径
 function createHref (base: string, fullPath: string, mode) {
+  // hash模式 路径放在#之后
   var path = mode === 'hash' ? '#' + fullPath : fullPath
+  // 如果有base就拼上base/
   return base ? cleanPath(base + '/' + path) : path
 }
 

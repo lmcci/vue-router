@@ -76,6 +76,7 @@ export class History {
 
     // 路径切换
     this.confirmTransition(route, () => {
+      // 成功回调
       this.updateRoute(route)
       onComplete && onComplete(route)
       this.ensureURL()
@@ -86,6 +87,7 @@ export class History {
         this.readyCbs.forEach(cb => { cb(route) })
       }
     }, err => {
+      // 失败回调
       if (onAbort) {
         onAbort(err)
       }
@@ -97,8 +99,11 @@ export class History {
   }
 
   confirmTransition (route: Route, onComplete: Function, onAbort?: Function) {
+    // current就是当前的路径  切换成功的时候会改变这个值
     const current = this.current
+    // 对传入的失败回调再封装一层
     const abort = err => {
+      // 输出一些错误信息 错误回调队列的执行
       if (isError(err)) {
         if (this.errorCbs.length) {
           this.errorCbs.forEach(cb => { cb(err) })
@@ -123,11 +128,11 @@ export class History {
       return abort()
     }
 
-    // 当前路径的record  目标路径的record
+    // 当前路径的record包含parent  目标路径的record包含parent
     // updated
     // deactivated
     // activated
-    // 上面这三个都是record
+    // 上面这三个都是record  哪些需要新建 哪些需要销毁 哪些需要更新
     const {
       updated,
       deactivated,
@@ -138,14 +143,16 @@ export class History {
     // to from next
     const queue: Array<?NavigationGuard> = [].concat(
       // in-component leave guards
+      //  销毁的 beforeRouteLeave
       extractLeaveGuards(deactivated),
       // global before hooks
-      // 用户定一个的
+      // 用户定义的 beforeEach
       this.router.beforeHooks,
       // in-component update hooks
+      //  更新的 beforeRouteUpdate
       extractUpdateHooks(updated),
       // in-config enter guards
-      //  新的要激活的路由 把所有的beforeEnter获取出来
+      //  新的要激活的路由 路由表中定义的 把所有的beforeEnter获取出来 新建的
       activated.map(m => m.beforeEnter),
       // async components
       //  异步组件 新的要激活的路由
@@ -160,6 +167,7 @@ export class History {
         return abort()
       }
       try {
+        // 调用对应的钩子 传入route当做to, current当做from 还有一个方法 当做next
         hook(route, current, (to: any) => {
           if (to === false || isError(to)) {
             // next(false) -> abort navigation, ensure current URL
@@ -202,7 +210,7 @@ export class History {
       // 上一个队列执行完毕后 再构建一个队列 继续执行
       // beforeRouteEnter
       const enterGuards = extractEnterGuards(activated, postEnterCbs, isValid)
-      // 用户设置的beforeResolve
+      // 用户设置的beforeResolve beforeHooks
       const queue = enterGuards.concat(this.router.resolveHooks)
       runQueue(queue, iterator, () => {
         if (this.pending !== route) {
@@ -299,11 +307,13 @@ function extractGuards (
     // 组件名（路由的component 默认defalut）
 
     // name是参数传入的 beforeRouteLeave 或者 beforeRouteUpdate
+    // guard是对应组件的生命周期函数
     const guard = extractGuard(def, name)
     if (guard) {
       return Array.isArray(guard)
         //  是一个数组 就遍历 然后调用bind 把所有返回值 组成数组
         //  bind是为了执行生命周期的时候绑定一个上下文 传入的instance
+        //
         ? guard.map(guard => bind(guard, instance, match, key))
         : bind(guard, instance, match, key)
     }
@@ -349,6 +359,10 @@ function extractEnterGuards (
   cbs: Array<Function>,
   isValid: () => boolean
 ): Array<?Function> {
+  // 这里bind方法比较特殊
+  // bind是为了执行生命周期的时候改变上下文用的
+  // 这里组件还没有实例化 所以用不了this
+  // 有next回调函数 可以用this
   return extractGuards(activated, 'beforeRouteEnter', (guard, _, match, key) => {
     return bindEnterGuard(guard, match, key, cbs, isValid)
   })
@@ -380,15 +394,19 @@ function bindEnterGuard (
   }
 }
 
+// 轮询判断instances有没有
 function poll (
   cb: any, // somehow flow cannot infer this is a function
   instances: Object,
   key: string,
   isValid: () => boolean
 ) {
+  // 有的时候直接执行回调
   if (instances[key]) {
     cb(instances[key])
   } else if (isValid()) {
+    // isValid 是判断导航是否还是当前的
+    // 没有就等16毫秒后继续执行
     setTimeout(() => {
       poll(cb, instances, key, isValid)
     }, 16)

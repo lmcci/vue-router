@@ -52,7 +52,7 @@ export default class VueRouter {
     if (this.fallback) {
       mode = 'hash'
     }
-    // 非浏览器才用 抽象模式
+    // 非浏览器才用 必须抽象模式
     if (!inBrowser) {
       mode = 'abstract'
     }
@@ -76,6 +76,7 @@ export default class VueRouter {
           assert(false, `invalid mode: ${mode}`)
         }
     }
+  //   new VueRouter(opt) 初始化完成
   }
 
   // 每当调用history的transitionTo都会调用这里的match方法
@@ -103,7 +104,9 @@ export default class VueRouter {
       `before creating root instance.`
     )
 
-    // apps里面记录了 vue组件实例对象
+    // apps里面记录了 vue组件实例对象.
+    // 多次执行init只是在apps中记录一下
+    // 有可能一个router实例被多个vue实例使用
     this.apps.push(app)
 
     // main app already initialized.
@@ -140,7 +143,9 @@ export default class VueRouter {
 
     // 路径监听
     history.listen(route => {
+      // 遍历所有使用当前vuerouter的实例的根vm对象
       this.apps.forEach((app) => {
+        // app就是根vm 把变化的route给所有的vm._route赋值
         app._route = route
       })
     })

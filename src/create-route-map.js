@@ -100,7 +100,6 @@ function addRouteRecord (
     // :foo 这种路径匹配正则
     regex: compileRouteRegex(normalizedPath, pathToRegexpOptions),
     // 路径对应的组件
-    // todo components component 有什么区别
     // 就算传的是component 最后也是要构造一个对象 当做components用
     components: route.components || { default: route.component },
     // 组件的实例
@@ -188,7 +187,7 @@ function addRouteRecord (
     pathMap[record.path] = record
   }
 
-  // 命名路由
+  // 命名路由 多生成nameMap
   if (name) {
     // 如果map中没有 就添加进map
     if (!nameMap[name]) {

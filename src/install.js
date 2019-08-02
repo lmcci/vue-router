@@ -45,7 +45,7 @@ export function install (Vue) {
         this._routerRoot = (this.$parent && this.$parent._routerRoot) || this
       }
 
-      //
+      // router-view 组件中使用
       registerInstance(this, this)
     },
     destroyed () {
@@ -60,7 +60,7 @@ export function install (Vue) {
   })
 
   // Vue原型上定义$route
-  // 每个实例访问到$route的时候 其实是在访问_routerRoot._route
+  // 每个实例访问到$route的时候 其实是在访问vm._route
   Object.defineProperty(Vue.prototype, '$route', {
     get () { return this._routerRoot._route }
   })

@@ -29,6 +29,7 @@ export function createMatcher (
   // 后面还有 match  redirect  alias  _createRoute 几个方法
 
   // 判断是否能够匹配
+  // 计算出新的路径  然后根据路径生成一个route对象
   function match (
     raw: RawLocation,   // 下一个路由 string | Location
     currentRoute?: Route,  // 当前路由 {path: string;name: ?string;hash: string;query: Dictionary<string>;params: Dictionary<string>;fullPath: string;matched: Array<RouteRecord>;redirectedFrom?: string;meta?: any;}
@@ -50,6 +51,7 @@ export function createMatcher (
       // 就创建一个route对象  传入的是null 最后这个route匹配不到组件
       if (!record) return _createRoute(null, location)
       // 有record
+      // 处理参数
       const paramNames = record.regex.keys
         .filter(key => !key.optional)
         .map(key => key.name)
@@ -66,16 +68,21 @@ export function createMatcher (
         }
       }
 
+      // 命名路由创建router
       if (record) {
         location.path = fillParams(record.path, location.params, `named route "${name}"`)
         return _createRoute(record, location, redirectedFrom)
       }
     } else if (location.path) {
       location.params = {}
+      // 遍历所有的path 从而取到所有的record
       for (let i = 0; i < pathList.length; i++) {
         const path = pathList[i]
+        // 取到每个对应的record
         const record = pathMap[path]
+        // 看上面生成的新的path和 当前遍历到的正则是否能够匹配
         if (matchRoute(record.regex, location.path, location.params)) {
+          // 匹配成功就创建新的路由
           return _createRoute(record, location, redirectedFrom)
         }
       }
@@ -183,12 +190,13 @@ export function createMatcher (
   }
 
   return {
-    match,
-    addRoutes
+    match,    // 根据现有的和传入的生成一个新的路径 然后再生成一个路由
+    addRoutes   // 外部动态添加路由
   }
 }
 
 // regex是上面调用第三方库生成的正则
+// 当前路由和正则是否能够匹配
 function matchRoute (
   regex: RouteRegExp, // 路由匹配的正则
   path: string,
